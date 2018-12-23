@@ -1,0 +1,13 @@
+[package]
+name = "tileTerminal"
+version = "0.1.0"
+authors = ["letres <letres@github.com>"]
+description = "A WIP tile based terminal emulator rouglike engine"
+license = "GPL-2.0-only"
+[dependencies]
+
+[dependencies.sdl2]
+
+version = "0.30.0"
+default-features = false
+features = [ "image" ]
