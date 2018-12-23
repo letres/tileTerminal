@@ -29,10 +29,11 @@ struct Cursor {
 struct Region<'cells> {
     //Stores a vector of all cells in a region.
     //Stores image of tileset basis with tile size as well.
-//    cursor: Cursor,
+    cursor: Cursor,
     hole: Rect,
     texture:sdl2::render::Texture<'cells>,
     grid: Vec<Cell>,
+    size: (u32, u32),
 }
 struct Context {
     //Everything that is needed for the window?
@@ -45,7 +46,7 @@ impl Cell{
         let pos = Rect::new(corner.0,corner.1,size.0,size.1);
         let ret=Cell{
             //Default char=0,white color, black backround.
-            char:1,
+            char:0,
             pos:pos,
             red:255,
             green:255,
@@ -79,20 +80,30 @@ impl Cell{
         canvas.copy(texture,Some( hole),Some(self.pos)).unwrap();
     }
 }
-//impl Cursor{
-//    fn new()->Cursor{
-//        Cursor{
-//            pos:(0,0),
-//            store(0,0),
-//        }
-//    }
-//    fn move(&self,m:u32,n,u32){
-//        self.pos=(m,n)
-//    }
-//    fn write(&self,char ){
-        
-//    }
-//}
+impl Cursor{
+    fn new()->Cursor{
+        Cursor{
+            pos:(0,0),
+            store:(0,0),
+        }
+    }
+    fn move_pos(&mut self,m:u32,n:u32){
+        self.pos=(m,n)
+    }
+    fn write_char(&self,char:u8, region:&mut Region){
+        region.grid[(region.size.0*self.pos.1+self.pos.0) as usize].char=char
+    }
+    fn write_color(&self,color:(u8,u8,u8), region:&mut Region){
+        region.grid[(region.size.0*self.pos.1+self.pos.0) as usize].red=color.0;
+        region.grid[(region.size.0*self.pos.1+self.pos.0) as usize].green=color.1;
+        region.grid[(region.size.0*self.pos.1+self.pos.0) as usize].blue=color.2;
+    }
+    fn write_b_color(&self,color:(u8,u8,u8), region:&mut Region){
+        region.grid[(region.size.0*self.pos.1+self.pos.0) as usize].b_red=color.0;
+        region.grid[(region.size.0*self.pos.1+self.pos.0) as usize].b_green=color.1;
+        region.grid[(region.size.0*self.pos.1+self.pos.0) as usize].b_blue=color.2;
+    }
+}
 impl<'cell> Region<'cell> {
     fn new(size:(u32,u32),mut corner:(i32,i32),path:&str
                 ,creator:&'cell TextureCreator<WindowContext>)->Region<'cell>{
@@ -116,9 +127,11 @@ impl<'cell> Region<'cell> {
         }
         let hole=Rect::new(0,0,hole_size.0,hole_size.1);
         Region{
+            size:size,
             texture:texture,
             grid:grid,
             hole:hole,
+            cursor:Cursor::new(),
         }
     }
     fn render(&mut self,mut canvas:&mut sdl2::render::Canvas<Window>){
@@ -162,5 +175,27 @@ fn main(){
     context.canvas.clear();
     region.render(&mut context.canvas);
     context.canvas.present();
+    let mut cursor=Cursor::new();
+    for i in 0..40*30{
+        cursor.move_pos((i)%40,(i)/40);
+        cursor.write_char((i%256) as u8,&mut region);
+        region.render(&mut context.canvas);
+        context.canvas.present();
+        std::thread::sleep(Duration::from_millis(40));
+    }
+    for i in 0..40*30{
+        cursor.move_pos((i)%40,(i)/40);
+        cursor.write_color(((i%256) as u8,(i/16) as u8,0),&mut region);
+        region.render(&mut context.canvas);
+        context.canvas.present();
+        std::thread::sleep(Duration::from_millis(40));
+    }
+    for i in 0..40*30{
+        cursor.move_pos((i)%40,(i)/40);
+        cursor.write_b_color((0,(i%256) as u8,(i/32) as u8),&mut region);
+        region.render(&mut context.canvas);
+        context.canvas.present();
+        std::thread::sleep(Duration::from_millis(40));
+    }
     std::thread::sleep(Duration::from_millis(8000));
 }
